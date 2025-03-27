@@ -1,0 +1,15 @@
+{
+  "name": "Cavernvibe",
+  "theme_color": "#000000",
+  "background_color": "#000000",
+  "short_name": "Cavernvibe",
+  "id": "com.cavernvibe.pwa",
+  "start_url": "/dashboard",
+  "lang": "en",
+  "orientation": "portrait",
+  "scope": "https://cavernvibe.com/",
+  "scope_extensions": [
+      {"origin": "*.cavernvibe.com"},
+      {"origin": "appleid.apple.com"}
+  ]
+}
