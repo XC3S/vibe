@@ -3,12 +3,12 @@
 import { useEffect, useRef } from 'react';
 import { createGameMap, drawTile } from './map';
 import { getViewportBounds, Camera } from './camera';
-import { Player, GameController, TILE_SIZE, loadPlayerSprites } from './core';
+import { Player, GameController, TILE_SIZE } from './core';
 
 export default function GamePage() {
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100">
-      <h1 className="text-3xl font-bold mb-4">Zelda-like RPG</h1>
+      <h1 className="text-3xl font-bold mb-4">ARPG</h1>
       <GameCanvas />
     </div>
   );
@@ -20,8 +20,8 @@ const GameCanvas = () => {
   // Game settings
   const MAP_WIDTH = 50; // Map width in tiles
   const MAP_HEIGHT = 40; // Map height in tiles
-  const VIEWPORT_WIDTH = 16; // Visible tiles horizontally
-  const VIEWPORT_HEIGHT = 12; // Visible tiles vertically
+  const VIEWPORT_WIDTH = 14; // Visible tiles horizontally
+  const VIEWPORT_HEIGHT = 10; // Visible tiles vertically
   
   // Game controller - stores the main game state
   const gameControllerRef = useRef<GameController | null>(null);

@@ -233,36 +233,40 @@ export default class Player extends Actor {
     const dirImg = this._directionalImages[this._direction];
     const dirImgLoaded = this._directionalImageLoaded[this._direction];
     
-    if (dirImg && dirImgLoaded) {
-      // Use directional image if available
-      ctx.drawImage(
-        dirImg,
-        renderX,
-        renderY,
-        this._width,
-        this._height
-      );
-    } else if (this._image && this._imageLoaded) {
-      // Fall back to default image
-      ctx.drawImage(
-        this._image,
-        renderX,
-        renderY,
-        this._width,
-        this._height
-      );
+    // Check if facing left to flip the image horizontally
+    const isFlipped = this._direction === Direction.LEFT;
+    
+    if (isFlipped) {
+      // Simplified approach for flipping
+      ctx.save();
+      
+      // Draw the image flipped
+      ctx.translate(renderX + this._width, renderY);
+      ctx.scale(-1, 1);
+      
+      if (dirImg && dirImgLoaded) {
+        ctx.drawImage(dirImg, 0, 0, this._width, this._height);
+      } else if (this._image && this._imageLoaded) {
+        ctx.drawImage(this._image, 0, 0, this._width, this._height);
+      } else {
+        ctx.fillStyle = '#FF0000';
+        ctx.fillRect(0, 0, this._width, this._height);
+      }
+      
+      ctx.restore();
     } else {
-      // Fall back to colored rectangle
-      ctx.fillStyle = '#FF0000';
-      ctx.fillRect(
-        renderX, 
-        renderY, 
-        this._width, 
-        this._height
-      );
+      // Normal rendering (no flip)
+      if (dirImg && dirImgLoaded) {
+        ctx.drawImage(dirImg, renderX, renderY, this._width, this._height);
+      } else if (this._image && this._imageLoaded) {
+        ctx.drawImage(this._image, renderX, renderY, this._width, this._height);
+      } else {
+        ctx.fillStyle = '#FF0000';
+        ctx.fillRect(renderX, renderY, this._width, this._height);
+      }
     }
     
-    // Draw simple health bar above player
+    // Draw simple health bar above player (not affected by flip)
     const healthBarWidth = this._width;
     const healthBarHeight = 4;
     const healthBarY = renderY - healthBarHeight - 2;
