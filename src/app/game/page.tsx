@@ -1,9 +1,9 @@
 'use client';
 
 import { useEffect, useRef } from 'react';
-import { PlayerState, setupPlayerControls, updatePlayerPosition } from './player.controller';
-import { GameMap, TileType, createGameMap, checkCollisionWithMap, drawTile } from './map';
-import { Camera, updateCamera, getViewportBounds } from './camera';
+import { createGameMap, drawTile } from './map';
+import { getViewportBounds, Camera } from './camera';
+import { Player, GameController, TILE_SIZE, loadPlayerSprites } from './core';
 
 export default function GamePage() {
   return (
@@ -18,49 +18,113 @@ const GameCanvas = () => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   
   // Game settings
-  const TILE_SIZE = 32; // Size of each tile in pixels
   const MAP_WIDTH = 50; // Map width in tiles
   const MAP_HEIGHT = 40; // Map height in tiles
   const VIEWPORT_WIDTH = 16; // Visible tiles horizontally
   const VIEWPORT_HEIGHT = 12; // Visible tiles vertically
   
-  // Create the game map
-  const gameMapRef = useRef<GameMap>(createGameMap(MAP_WIDTH, MAP_HEIGHT, TILE_SIZE));
+  // Game controller - stores the main game state
+  const gameControllerRef = useRef<GameController | null>(null);
   
-  // Initialize player state
-  const playerRef = useRef<PlayerState>({
-    x: 10 * TILE_SIZE,
-    y: 10 * TILE_SIZE,
-    width: TILE_SIZE - 8,
-    height: TILE_SIZE - 8,
-    speed: 2,
-    color: '#FF0000',
-    moving: {
-      up: false,
-      down: false,
-      left: false,
-      right: false
-    }
-  });
-  
-  // Initialize camera
-  const cameraRef = useRef<Camera>({
-    x: 0,
-    y: 0,
-    width: VIEWPORT_WIDTH * TILE_SIZE,
-    height: VIEWPORT_HEIGHT * TILE_SIZE
-  });
-  
-  // FPS counter ref - moved out of useEffect to fix invalid hook call
+  // FPS counter ref
   const fpsCounterRef = useRef({
     frames: 0,
     lastTime: 0,
     value: 0
   });
 
-  // Set up player controls
+  // Setup game on component mount
   useEffect(() => {
-    return setupPlayerControls(playerRef);
+    // Create game map
+    const gameMap = createGameMap(MAP_WIDTH, MAP_HEIGHT, TILE_SIZE);
+    
+    // Create player
+    const player = new Player(
+      'player',
+      10 * TILE_SIZE, // x position
+      10 * TILE_SIZE, // y position
+      TILE_SIZE - 8,  // width
+      TILE_SIZE - 8,  // height
+      2,              // speed
+      '/gameAssets/soldier.png' // Default image
+    );
+    
+    // Create camera
+    const camera: Camera = {
+      x: 0,
+      y: 0,
+      width: VIEWPORT_WIDTH * TILE_SIZE,
+      height: VIEWPORT_HEIGHT * TILE_SIZE
+    };
+    
+    // Create game controller
+    const gameController = new GameController(gameMap, player, camera);
+    gameController.start(); // Start the game
+    
+    // Store game controller in ref
+    gameControllerRef.current = gameController;
+  }, []);
+
+  // Set up keyboard controls
+  useEffect(() => {
+    const gameController = gameControllerRef.current;
+    if (!gameController) return;
+    
+    const handleKeyDown = (e: KeyboardEvent) => {
+      switch (e.key) {
+        case 'ArrowUp':
+        case 'w':
+          gameController.updatePlayerInput({ up: true });
+          break;
+        case 'ArrowDown':
+        case 's':
+          gameController.updatePlayerInput({ down: true });
+          break;
+        case 'ArrowLeft':
+        case 'a':
+          gameController.updatePlayerInput({ left: true });
+          break;
+        case 'ArrowRight':
+        case 'd':
+          gameController.updatePlayerInput({ right: true });
+          break;
+        case ' ':
+          gameController.updatePlayerInput({ action: true });
+          break;
+      }
+    };
+
+    const handleKeyUp = (e: KeyboardEvent) => {
+      switch (e.key) {
+        case 'ArrowUp':
+        case 'w':
+          gameController.updatePlayerInput({ up: false });
+          break;
+        case 'ArrowDown':
+        case 's':
+          gameController.updatePlayerInput({ down: false });
+          break;
+        case 'ArrowLeft':
+        case 'a':
+          gameController.updatePlayerInput({ left: false });
+          break;
+        case 'ArrowRight':
+        case 'd':
+          gameController.updatePlayerInput({ right: false });
+          break;
+        case ' ':
+          gameController.updatePlayerInput({ action: false });
+          break;
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    window.addEventListener('keyup', handleKeyUp);
+
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('keyup', handleKeyUp);
+    };
   }, []);
 
   // Game loop and rendering
@@ -70,14 +134,13 @@ const GameCanvas = () => {
 
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
+    
+    const gameController = gameControllerRef.current;
+    if (!gameController) return;
 
     // Set canvas size to match viewport dimensions
     canvas.width = VIEWPORT_WIDTH * TILE_SIZE;
     canvas.height = VIEWPORT_HEIGHT * TILE_SIZE;
-    
-    // Update camera dimensions if they change
-    cameraRef.current.width = canvas.width;
-    cameraRef.current.height = canvas.height;
 
     let animationFrameId: number;
     let lastFrameTime = 0;
@@ -101,22 +164,14 @@ const GameCanvas = () => {
         fpsCounterRef.current.lastTime = timestamp;
       }
       
-      const player = playerRef.current;
-      const gameMap = gameMapRef.current;
-      const camera = cameraRef.current;
-      const mapWidthPx = MAP_WIDTH * TILE_SIZE;
-      const mapHeightPx = MAP_HEIGHT * TILE_SIZE;
+      // Update game state
+      gameController.update(deltaTime);
       
-      // Create collision checker that uses our map
-      const checkCollision = (x: number, y: number, width: number, height: number) => 
-        checkCollisionWithMap(x, y, width, height, gameMap);
+      // Get references to game objects
+      const player = gameController.player;
+      const gameMap = gameController.gameMap;
+      const camera = gameController.camera;
       
-      // Update player position with delta time
-      updatePlayerPosition(player, deltaTime, checkCollision, mapWidthPx, mapHeightPx);
-      
-      // Update camera to follow player
-      updateCamera(camera, player, mapWidthPx, mapHeightPx);
-
       // Clear canvas
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       
@@ -141,14 +196,8 @@ const GameCanvas = () => {
         }
       }
 
-      // Draw player (adjusted for camera position)
-      ctx.fillStyle = player.color;
-      ctx.fillRect(
-        player.x - camera.x + 4, // Center player in tile and adjust for camera
-        player.y - camera.y + 4,
-        player.width,
-        player.height
-      );
+      // Draw player
+      player.render(ctx, camera.x, camera.y);
       
       // Display FPS counter
       ctx.fillStyle = "black";
@@ -164,6 +213,9 @@ const GameCanvas = () => {
 
     return () => {
       cancelAnimationFrame(animationFrameId);
+      if (gameController) {
+        gameController.stop();
+      }
     };
   }, []);
 

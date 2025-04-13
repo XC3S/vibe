@@ -8,22 +8,30 @@ export interface Camera {
   height: number;
 }
 
+// Simple interface for objects with position and size
+export interface PositionAndSize {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}
+
 /**
- * Updates camera position to follow player
+ * Updates camera position to follow target
  * @param camera Camera object to update
- * @param player Current player state
+ * @param target Object to follow (must have x, y, width, height)
  * @param mapWidth Total map width in pixels
  * @param mapHeight Total map height in pixels
  */
 export function updateCamera(
   camera: Camera,
-  player: PlayerState,
+  target: PositionAndSize,
   mapWidth: number,
   mapHeight: number
 ): void {
-  // Center camera on player
-  camera.x = player.x + player.width / 2 - camera.width / 2;
-  camera.y = player.y + player.height / 2 - camera.height / 2;
+  // Center camera on target
+  camera.x = target.x + target.width / 2 - camera.width / 2;
+  camera.y = target.y + target.height / 2 - camera.height / 2;
   
   // Keep camera within map bounds
   camera.x = Math.max(0, Math.min(mapWidth - camera.width, camera.x));
