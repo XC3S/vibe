@@ -1,7 +1,15 @@
-export { default as GameObject } from './Object';
-export { default as Actor, Direction } from './Actor';
-export { default as Player, type PlayerInput } from './Player';
-export { default as GameController } from './GameController';
+// Import constants
+import { TILE_SIZE } from './constants';
+
+// Import core classes
+import GameObject from './Object';
+import Actor, { Direction } from './Actor';
+import Enemy, { EnemyState } from './Enemy';
+import Player from './Player';
+import GameController from './GameController';
+
+// Export constants
+export { TILE_SIZE };
 
 // Export utility functions
 export { 
@@ -11,5 +19,22 @@ export {
   generateId 
 } from './utils';
 
-// Export game constants
-export const TILE_SIZE = 64; // Size of each tile in pixels 
+// Export all components
+export {
+  GameObject,
+  Actor,
+  Direction,
+  Enemy,
+  EnemyState,
+  Player,
+  GameController
+};
+
+// Default export
+export default {
+  GameObject,
+  Actor,
+  Player,
+  Enemy,
+  GameController
+}; 

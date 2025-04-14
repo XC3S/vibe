@@ -1,7 +1,9 @@
 import { GameMap, checkCollisionWithMap } from '../map';
 import { Camera, updateCamera } from '../camera';
 import Player, { PlayerInput } from './Player';
-import { TILE_SIZE } from './index';
+import { TILE_SIZE } from './constants';
+import Enemy from './Enemy';
+import EnemyManager from './EnemyManager';
 
 // Simpler interface for position and size (matches camera.ts requirements)
 interface PositionAndSize {
@@ -20,6 +22,12 @@ export default class GameController {
   private _gameMap: GameMap;
   private _camera: Camera;
   
+  // Collection of enemies
+  private _enemies: Enemy[] = [];
+  
+  // Enemy manager
+  private _enemyManager: EnemyManager;
+  
   // Game settings
   private _tileSize: number = TILE_SIZE;
   
@@ -37,6 +45,38 @@ export default class GameController {
     this._gameMap = gameMap;
     this._player = player;
     this._camera = camera;
+    
+    // Create enemy manager
+    this._enemyManager = new EnemyManager(this, gameMap);
+  }
+  
+  /**
+   * Initialize enemy system with spawning configuration
+   * @param enemyFactories Array of enemy factory functions
+   * @param enemiesPerWave Number of enemies per wave
+   * @param timeBetweenWaves Time between waves in seconds
+   * @param maxEnemies Maximum number of concurrent enemies
+   * @param spawnPointCount Number of spawn points to generate around edges
+   */
+  initializeEnemySystem(
+    enemyFactories: ((x: number, y: number) => Enemy)[],
+    enemiesPerWave: number = 3,
+    timeBetweenWaves: number = 20,
+    maxEnemies: number = 10,
+    spawnPointCount: number = 12
+  ): void {
+    // Register enemy factories
+    this._enemyManager.registerEnemyFactories(enemyFactories);
+    
+    // Generate spawn points around the edges
+    this._enemyManager.generateSpawnPointsAroundEdges(spawnPointCount);
+    
+    // Configure wave spawning
+    this._enemyManager.configureWaveSpawning(
+      enemiesPerWave,
+      timeBetweenWaves,
+      maxEnemies
+    );
   }
   
   /**
@@ -58,6 +98,44 @@ export default class GameController {
    */
   get camera(): Camera {
     return this._camera;
+  }
+  
+  /**
+   * Get enemy manager
+   */
+  get enemyManager(): EnemyManager {
+    return this._enemyManager;
+  }
+  
+  /**
+   * Get all enemies
+   */
+  get enemies(): Enemy[] {
+    return this._enemies;
+  }
+  
+  /**
+   * Add an enemy to the game
+   * @param enemy Enemy to add
+   */
+  addEnemy(enemy: Enemy): void {
+    this._enemies.push(enemy);
+  }
+  
+  /**
+   * Add multiple enemies to the game
+   * @param enemies Array of enemies to add
+   */
+  addEnemies(enemies: Enemy[]): void {
+    this._enemies.push(...enemies);
+  }
+  
+  /**
+   * Remove an enemy from the game
+   * @param enemyId ID of the enemy to remove
+   */
+  removeEnemy(enemyId: string): void {
+    this._enemies = this._enemies.filter(enemy => enemy.id !== enemyId);
   }
   
   /**
@@ -125,6 +203,17 @@ export default class GameController {
     // Update player
     this._player.update(deltaTime, checkCollision);
     
+    // Update all enemies
+    for (const enemy of this._enemies) {
+      enemy.update(deltaTime, this._player, checkCollision);
+    }
+    
+    // Remove dead enemies
+    this._enemies = this._enemies.filter(enemy => enemy.isAlive);
+    
+    // Update enemy manager (handles spawning)
+    this._enemyManager.update(deltaTime);
+    
     // Update camera to follow player
     const mapWidthPx = this._gameMap.width * this._tileSize;
     const mapHeightPx = this._gameMap.height * this._tileSize;
@@ -143,5 +232,45 @@ export default class GameController {
       mapWidthPx, 
       mapHeightPx
     );
+  }
+  
+  /**
+   * Render all enemies
+   * @param ctx Canvas rendering context
+   */
+  renderEnemies(ctx: CanvasRenderingContext2D): void {
+    for (const enemy of this._enemies) {
+      enemy.render(ctx, this._camera.x, this._camera.y);
+    }
+  }
+  
+  /**
+   * Spawn an enemy at a random valid location on the map
+   * @param enemyFactory Factory function that creates an enemy
+   * @returns The spawned enemy or null if spawning failed
+   */
+  spawnEnemyAtRandomLocation(enemyFactory: (x: number, y: number) => Enemy): Enemy | null {
+    // Maximum attempts to find a valid spawn location
+    const maxAttempts = 50;
+    
+    for (let i = 0; i < maxAttempts; i++) {
+      // Find a random position within the map bounds
+      const x = Math.floor(Math.random() * (this._gameMap.width - 4) + 2) * this._tileSize;
+      const y = Math.floor(Math.random() * (this._gameMap.height - 4) + 2) * this._tileSize;
+      
+      // Check if the position is valid (no collision with map)
+      if (!checkCollisionWithMap(x, y, 48, 48, this._gameMap)) {
+        // Create the enemy
+        const enemy = enemyFactory(x, y);
+        
+        // Add it to the game
+        this.addEnemy(enemy);
+        
+        return enemy;
+      }
+    }
+    
+    console.warn("Failed to spawn enemy after maximum attempts");
+    return null;
   }
 } 

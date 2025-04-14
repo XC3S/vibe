@@ -3,7 +3,9 @@
 import { useEffect, useRef } from 'react';
 import { createGameMap, drawTile } from './map';
 import { getViewportBounds, Camera } from './camera';
-import { Player, GameController, TILE_SIZE } from './core';
+import { Player, GameController } from './core';
+import { TILE_SIZE } from './core/constants';
+import SkeletonWarrior from './enemies/SkeletonWarrior';
 
 export default function GamePage() {
   return (
@@ -59,7 +61,18 @@ const GameCanvas = () => {
     
     // Create game controller
     const gameController = new GameController(gameMap, player, camera);
-    gameController.start(); // Start the game
+    
+    // Initialize the enemy system with skeleton warriors
+    gameController.initializeEnemySystem(
+      [(x, y) => new SkeletonWarrior(x, y)], // Enemy factories
+      3,  // Enemies per wave
+      20, // Seconds between waves
+      10, // Max concurrent enemies
+      12  // Number of spawn points around edges
+    );
+    
+    // Start the game
+    gameController.start();
     
     // Store game controller in ref
     gameControllerRef.current = gameController;
@@ -196,13 +209,19 @@ const GameCanvas = () => {
         }
       }
 
+      // Draw enemies
+      gameController.renderEnemies(ctx);
+      
       // Draw player
       player.render(ctx, camera.x, camera.y);
       
-      // Display FPS counter
+      // Display game info
       ctx.fillStyle = "black";
       ctx.font = "12px Arial";
       ctx.fillText(`FPS: ${fpsCounterRef.current.value}`, 10, 20);
+      ctx.fillText(`Enemies: ${gameController.enemies.length}`, 10, 40);
+      ctx.fillText(`Wave: ${gameController.enemyManager.currentWave}`, 10, 60);
+      ctx.fillText(`Next Wave: ${Math.ceil(gameController.enemyManager.timeUntilNextWave)}s`, 10, 80);
 
       // Continue loop
       animationFrameId = requestAnimationFrame(renderGame);
