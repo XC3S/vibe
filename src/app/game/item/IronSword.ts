@@ -10,7 +10,7 @@ export class IronSword extends Weapon {
     super(
       'iron_sword',       // id
       'Iron Sword',       // name
-      '/public/gameAssets/sword1.png', // image path
+      '/gameAssets/sword1.png', // image path
       2,                  // attack speed
       11,                 // min damage
       22,                 // max damage

@@ -1,3 +1,5 @@
+import { IronSword } from '../item/IronSword';
+
 // Define player state interface
 export interface PlayerState {
   x: number;
@@ -83,6 +85,9 @@ export function setupPlayerControls(playerRef: { current: PlayerState }): () => 
  * @returns Initial player state
  */
 export function createPlayerState(): PlayerState {
+  const inventory = Array(15).fill(null);
+  inventory[0] = new IronSword(); // Add Iron Sword to the first inventory slot
+  
   return {
     x: 0,
     y: 0,
@@ -91,7 +96,7 @@ export function createPlayerState(): PlayerState {
     speed: 2,
     color: '#FF0000',
     inventoryOpen: false,
-    inventory: Array(15).fill(null), // Initialize 15 empty inventory slots
+    inventory,
     moving: {
       up: false,
       down: false,
