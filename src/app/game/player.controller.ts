@@ -78,6 +78,28 @@ export function setupPlayerControls(playerRef: { current: PlayerState }): () => 
 }
 
 /**
+ * Creates a new player state object
+ * @returns Initial player state
+ */
+export function createPlayerState(): PlayerState {
+  return {
+    x: 0,
+    y: 0,
+    width: 0,
+    height: 0,
+    speed: 2,
+    color: '#FF0000',
+    inventoryOpen: false,
+    moving: {
+      up: false,
+      down: false,
+      left: false,
+      right: false
+    }
+  };
+}
+
+/**
  * Updates player position based on movement state using delta time
  * @param player Current player state
  * @param deltaTime Time elapsed since last frame in seconds

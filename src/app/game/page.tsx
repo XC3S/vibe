@@ -6,6 +6,7 @@ import { getViewportBounds, Camera } from './camera';
 import { Player, GameController } from './core';
 import { TILE_SIZE } from './core/constants';
 import SkeletonWarrior from './enemies/SkeletonWarrior';
+import { setupPlayerControls } from './player.controller';
 
 export default function GamePage() {
   return (
@@ -78,6 +79,20 @@ const GameCanvas = () => {
     gameControllerRef.current = gameController;
   }, []);
 
+  // Set up player controller for inventory and other UI state
+  useEffect(() => {
+    const gameController = gameControllerRef.current;
+    if (!gameController) return;
+    
+    // Set up player controller (handles Tab key for inventory)
+    const playerStateRef = { current: gameController.playerState };
+    const cleanupPlayerControls = setupPlayerControls(playerStateRef);
+    
+    return () => {
+      cleanupPlayerControls();
+    };
+  }, []);
+
   // Set up keyboard controls
   useEffect(() => {
     const gameController = gameControllerRef.current;
@@ -103,6 +118,10 @@ const GameCanvas = () => {
           break;
         case ' ':
           gameController.updatePlayerInput({ action: true });
+          break;
+        case 'Tab':
+          e.preventDefault(); // Prevent tab from changing focus
+          // Tab is handled by playerController
           break;
       }
     };
@@ -154,6 +173,9 @@ const GameCanvas = () => {
     // Set canvas size to match viewport dimensions
     canvas.width = VIEWPORT_WIDTH * TILE_SIZE;
     canvas.height = VIEWPORT_HEIGHT * TILE_SIZE;
+    
+    // Initialize UI system
+    gameController.initializeUI(canvas, ctx);
 
     let animationFrameId: number;
     let lastFrameTime = 0;
@@ -222,6 +244,10 @@ const GameCanvas = () => {
       ctx.fillText(`Enemies: ${gameController.enemies.length}`, 10, 40);
       ctx.fillText(`Wave: ${gameController.enemyManager.currentWave}`, 10, 60);
       ctx.fillText(`Next Wave: ${Math.ceil(gameController.enemyManager.timeUntilNextWave)}s`, 10, 80);
+      ctx.fillText(`Inventory: ${gameController.playerState.inventoryOpen ? 'Open' : 'Closed'}`, 10, 100);
+
+      // Render UI on top of everything
+      gameController.renderUI(ctx);
 
       // Continue loop
       animationFrameId = requestAnimationFrame(renderGame);
@@ -245,7 +271,7 @@ const GameCanvas = () => {
         className="bg-green-100"
       />
       <div className="bg-gray-200 p-2 text-sm">
-        Use arrow keys or WASD to move
+        Use arrow keys or WASD to move | Press Tab to open/close inventory
       </div>
     </div>
   );

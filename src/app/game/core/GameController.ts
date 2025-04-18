@@ -4,6 +4,8 @@ import Player, { PlayerInput } from './Player';
 import { TILE_SIZE } from './constants';
 import Enemy from './Enemy';
 import EnemyManager from './EnemyManager';
+import { UI } from '../HUD';
+import { PlayerState, createPlayerState } from '../player.controller';
 
 // Simpler interface for position and size (matches camera.ts requirements)
 interface PositionAndSize {
@@ -22,11 +24,17 @@ export default class GameController {
   private _gameMap: GameMap;
   private _camera: Camera;
   
+  // Player state for UI/controls
+  private _playerState: PlayerState;
+  
   // Collection of enemies
   private _enemies: Enemy[] = [];
   
   // Enemy manager
   private _enemyManager: EnemyManager;
+  
+  // UI system
+  private _ui: UI | null = null;
   
   // Game settings
   private _tileSize: number = TILE_SIZE;
@@ -45,6 +53,14 @@ export default class GameController {
     this._gameMap = gameMap;
     this._player = player;
     this._camera = camera;
+    
+    // Initialize player state from player
+    this._playerState = createPlayerState();
+    this._playerState.x = player.x;
+    this._playerState.y = player.y;
+    this._playerState.width = player.width;
+    this._playerState.height = player.height;
+    this._playerState.speed = player.speed;
     
     // Create enemy manager
     this._enemyManager = new EnemyManager(this, gameMap);
@@ -80,6 +96,15 @@ export default class GameController {
   }
   
   /**
+   * Initialize the UI system
+   * @param canvas Canvas element for rendering
+   * @param context Canvas rendering context
+   */
+  initializeUI(canvas: HTMLCanvasElement, context: CanvasRenderingContext2D): void {
+    this._ui = new UI(canvas, context);
+  }
+  
+  /**
    * Get player instance
    */
   get player(): Player {
@@ -112,6 +137,20 @@ export default class GameController {
    */
   get enemies(): Enemy[] {
     return this._enemies;
+  }
+  
+  /**
+   * Get UI system
+   */
+  get ui(): UI | null {
+    return this._ui;
+  }
+  
+  /**
+   * Get player state for UI
+   */
+  get playerState(): PlayerState {
+    return this._playerState;
   }
   
   /**
@@ -203,6 +242,16 @@ export default class GameController {
     // Update player
     this._player.update(deltaTime, checkCollision);
     
+    // Sync player state
+    this._playerState.x = this._player.x;
+    this._playerState.y = this._player.y;
+    this._playerState.moving = {
+      up: this._player.input.up,
+      down: this._player.input.down,
+      left: this._player.input.left,
+      right: this._player.input.right
+    };
+    
     // Update all enemies
     for (const enemy of this._enemies) {
       enemy.update(deltaTime, this._player, checkCollision);
@@ -241,6 +290,16 @@ export default class GameController {
   renderEnemies(ctx: CanvasRenderingContext2D): void {
     for (const enemy of this._enemies) {
       enemy.render(ctx, this._camera.x, this._camera.y);
+    }
+  }
+  
+  /**
+   * Render UI elements
+   * @param ctx Canvas rendering context
+   */
+  renderUI(ctx: CanvasRenderingContext2D): void {
+    if (this._ui) {
+      this._ui.render(this._playerState);
     }
   }
   
