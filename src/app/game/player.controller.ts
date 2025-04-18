@@ -6,6 +6,7 @@ export interface PlayerState {
   height: number;
   speed: number;
   color: string;
+  inventoryOpen: boolean;
   moving: {
     up: boolean;
     down: boolean;
@@ -37,6 +38,10 @@ export function setupPlayerControls(playerRef: { current: PlayerState }): () => 
       case 'ArrowRight':
       case 'd':
         playerRef.current.moving.right = true;
+        break;
+      case 'Tab':
+        e.preventDefault(); // Prevent tab from changing focus
+        playerRef.current.inventoryOpen = !playerRef.current.inventoryOpen;
         break;
     }
   };
