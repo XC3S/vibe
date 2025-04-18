@@ -7,6 +7,7 @@ export interface PlayerState {
   speed: number;
   color: string;
   inventoryOpen: boolean;
+  inventory: Array<any>; // Array to hold up to 15 items
   moving: {
     up: boolean;
     down: boolean;
@@ -90,6 +91,7 @@ export function createPlayerState(): PlayerState {
     speed: 2,
     color: '#FF0000',
     inventoryOpen: false,
+    inventory: Array(15).fill(null), // Initialize 15 empty inventory slots
     moving: {
       up: false,
       down: false,
