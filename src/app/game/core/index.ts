@@ -7,6 +7,7 @@ import Actor, { Direction } from './Actor';
 import Enemy, { EnemyState } from './Enemy';
 import Player from './Player';
 import GameController from './GameController';
+import { PlayerState, setupPlayerControls, createPlayerState, updatePlayerPosition } from './PlayerController';
 
 // Export constants
 export { TILE_SIZE };
@@ -27,8 +28,14 @@ export {
   Enemy,
   EnemyState,
   Player,
-  GameController
+  GameController,
+  setupPlayerControls,
+  createPlayerState,
+  updatePlayerPosition
 };
+
+// Export types
+export type { PlayerState }; 
 
 // Default export
 export default {

@@ -5,7 +5,7 @@ import { TILE_SIZE } from './constants';
 import Enemy from './Enemy';
 import EnemyManager from './EnemyManager';
 import { UI } from '../HUD';
-import { PlayerState, createPlayerState } from '../player.controller';
+import { PlayerState, createPlayerState } from './PlayerController';
 
 // Simpler interface for position and size (matches camera.ts requirements)
 interface PositionAndSize {

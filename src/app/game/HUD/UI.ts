@@ -1,4 +1,4 @@
-import { PlayerState } from "../player.controller";
+import { PlayerState } from "../core/PlayerController";
 
 export class UI {
   private context: CanvasRenderingContext2D;

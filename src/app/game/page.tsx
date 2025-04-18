@@ -3,10 +3,9 @@
 import { useEffect, useRef } from 'react';
 import { createGameMap, drawTile } from './map';
 import { getViewportBounds, Camera } from './camera';
-import { Player, GameController } from './core';
+import { Player, GameController, setupPlayerControls } from './core';
 import { TILE_SIZE } from './core/constants';
 import SkeletonWarrior from './enemies/SkeletonWarrior';
-import { setupPlayerControls } from './player.controller';
 
 export default function GamePage() {
   return (
