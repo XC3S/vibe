@@ -1,4 +1,5 @@
 import { PlayerState } from "../core/PlayerController";
+import { EquipmentSlot } from "../item/Item";
 
 export class UI {
   private context: CanvasRenderingContext2D;
@@ -157,44 +158,53 @@ export class UI {
     this.context.textAlign = 'center';
     this.context.fillText('Equipment', baseX + slotSize, baseY - 10);
     
+    // Helper function to draw a slot and its item if equipped
+    const drawEquipmentSlot = (x: number, y: number, slotType: EquipmentSlot | 'LEFT_RING' | 'RIGHT_RING') => {
+      // Slot background
+      this.context.fillStyle = slotBgColor;
+      this.context.fillRect(x, y, slotSize, slotSize);
+      
+      // Slot border
+      this.context.strokeStyle = slotBorderColor;
+      this.context.lineWidth = 1;
+      this.context.strokeRect(x, y, slotSize, slotSize);
+      
+      // Draw item if equipped
+      if (player.equipment && slotType in player.equipment) {
+        const item = player.equipment[slotType as keyof typeof player.equipment];
+        if (item && item.image) {
+          this.drawItemInSlot(x, y, item.image, slotSize);
+        }
+      }
+    };
+    
     // Create equipment slots with appropriate spacing
     
     // Helmet at the top
-    this.context.fillStyle = slotBgColor;
-    this.context.fillRect(baseX, baseY, slotSize, slotSize);
-    this.context.strokeStyle = slotBorderColor;
-    this.context.lineWidth = 1;
-    this.context.strokeRect(baseX, baseY, slotSize, slotSize);
+    drawEquipmentSlot(baseX, baseY, EquipmentSlot.HEAD);
     
     // Chest below helmet
-    this.context.fillRect(baseX, baseY + slotSize + padding, slotSize, slotSize);
-    this.context.strokeRect(baseX, baseY + slotSize + padding, slotSize, slotSize);
+    drawEquipmentSlot(baseX, baseY + slotSize + padding, EquipmentSlot.BODY);
     
     // Gloves below chest
-    this.context.fillRect(baseX, baseY + (slotSize + padding) * 2, slotSize, slotSize);
-    this.context.strokeRect(baseX, baseY + (slotSize + padding) * 2, slotSize, slotSize);
+    drawEquipmentSlot(baseX, baseY + (slotSize + padding) * 2, EquipmentSlot.GLOVES);
     
-    // Boots below gloves
-    this.context.fillRect(baseX, baseY + (slotSize + padding) * 3, slotSize, slotSize);
-    this.context.strokeRect(baseX, baseY + (slotSize + padding) * 3, slotSize, slotSize);
+    // Boots below gloves (using RING for now, add BOOTS slot later)
+    drawEquipmentSlot(baseX, baseY + (slotSize + padding) * 3, 'LEFT_RING');
     
     // Mainhand (left side of chest)
-    this.context.fillRect(baseX - slotSize - padding/2, baseY + slotSize + padding, slotSize, slotSize);
-    this.context.strokeRect(baseX - slotSize - padding/2, baseY + slotSize + padding, slotSize, slotSize);
+    drawEquipmentSlot(baseX - slotSize - padding/2, baseY + slotSize + padding, EquipmentSlot.MAIN_HAND);
     
     // Offhand (right side of chest)
-    this.context.fillRect(baseX + slotSize + padding/2, baseY + slotSize + padding, slotSize, slotSize);
-    this.context.strokeRect(baseX + slotSize + padding/2, baseY + slotSize + padding, slotSize, slotSize);
+    drawEquipmentSlot(baseX + slotSize + padding/2, baseY + slotSize + padding, EquipmentSlot.OFF_HAND);
     
-    // Rings (bottom row)
-    this.context.fillRect(baseX - slotSize/2 - padding/4, baseY + (slotSize + padding) * 4, slotSize, slotSize);
-    this.context.strokeRect(baseX - slotSize/2 - padding/4, baseY + (slotSize + padding) * 4, slotSize, slotSize);
+    // Left Ring (bottom row left)
+    drawEquipmentSlot(baseX - slotSize/2 - padding/4, baseY + (slotSize + padding) * 4, 'LEFT_RING');
     
-    this.context.fillRect(baseX + slotSize/2 + padding/4, baseY + (slotSize + padding) * 4, slotSize, slotSize);
-    this.context.strokeRect(baseX + slotSize/2 + padding/4, baseY + (slotSize + padding) * 4, slotSize, slotSize);
+    // Right Ring (bottom row right)
+    drawEquipmentSlot(baseX + slotSize/2 + padding/4, baseY + (slotSize + padding) * 4, 'RIGHT_RING');
     
     // Amulet (below helmet, above chest)
-    this.context.fillRect(baseX + slotSize + padding/2, baseY, slotSize, slotSize);
-    this.context.strokeRect(baseX + slotSize + padding/2, baseY, slotSize, slotSize);
+    drawEquipmentSlot(baseX + slotSize + padding/2, baseY, EquipmentSlot.AMULET);
   }
 } 

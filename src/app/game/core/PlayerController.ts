@@ -1,4 +1,17 @@
 import { IronSword } from '../item/IronSword';
+import { Item, EquipmentSlot } from '../item/Item';
+
+// Define equipment interface
+export interface Equipment {
+  [EquipmentSlot.HEAD]: Item | null;
+  [EquipmentSlot.BODY]: Item | null;
+  [EquipmentSlot.MAIN_HAND]: Item | null;
+  [EquipmentSlot.OFF_HAND]: Item | null;
+  [EquipmentSlot.GLOVES]: Item | null;
+  LEFT_RING: Item | null;
+  RIGHT_RING: Item | null;
+  [EquipmentSlot.AMULET]: Item | null;
+}
 
 // Define player state interface
 export interface PlayerState {
@@ -10,6 +23,7 @@ export interface PlayerState {
   color: string;
   inventoryOpen: boolean;
   inventory: Array<any>; // Array to hold up to 15 items
+  equipment: Equipment; // Equipment slots for the player
   moving: {
     up: boolean;
     down: boolean;
@@ -86,7 +100,20 @@ export function setupPlayerControls(playerRef: { current: PlayerState }): () => 
  */
 export function createPlayerState(): PlayerState {
   const inventory = Array(15).fill(null);
-  inventory[0] = new IronSword(); // Add Iron Sword to the first inventory slot
+  const ironSword = new IronSword(); 
+  inventory[0] = ironSword; // Add Iron Sword to the first inventory slot
+  
+  // Initialize empty equipment
+  const equipment: Equipment = {
+    [EquipmentSlot.HEAD]: null,
+    [EquipmentSlot.BODY]: null,
+    [EquipmentSlot.MAIN_HAND]: null,
+    [EquipmentSlot.OFF_HAND]: null,
+    [EquipmentSlot.GLOVES]: null,
+    LEFT_RING: null,
+    RIGHT_RING: null,
+    [EquipmentSlot.AMULET]: null
+  };
   
   return {
     x: 0,
@@ -97,6 +124,7 @@ export function createPlayerState(): PlayerState {
     color: '#FF0000',
     inventoryOpen: false,
     inventory,
+    equipment,
     moving: {
       up: false,
       down: false,
