@@ -1,5 +1,6 @@
 import { IronSword } from '../item/IronSword';
 import { Item, EquipmentSlot } from '../item/Item';
+import Player from './Player';
 
 // Define equipment interface
 export interface Equipment {
@@ -170,4 +171,19 @@ export function updatePlayerPosition(
   // Keep player within map bounds
   player.x = Math.max(0, Math.min(mapWidth - player.width, player.x));
   player.y = Math.max(0, Math.min(mapHeight - player.height, player.y));
+}
+
+/**
+ * Synchronizes equipment from the PlayerState to the Player object
+ * @param player The player object to update
+ * @param state The player state containing equipment data
+ */
+export function syncEquipmentToPlayer(player: Player, state: PlayerState): void {
+  // Sync each equipment slot
+  for (const slot of Object.keys(state.equipment) as Array<keyof Equipment>) {
+    const item = state.equipment[slot];
+    if (item !== player.equipment[slot]) {
+      player.equip(item, slot);
+    }
+  }
 } 

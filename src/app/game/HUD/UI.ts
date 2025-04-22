@@ -178,6 +178,8 @@ export class UI {
   }): void {
     if (!this.currentPlayerState || !this.draggedItemSource) return;
     
+    let equipmentChanged = false;
+    
     // Same slot - do nothing
     if (
       (targetSlot.inventoryIndex !== undefined && 
@@ -215,6 +217,9 @@ export class UI {
       
       // Place previously equipped item (if any) into inventory slot
       this.currentPlayerState.inventory[this.draggedItemSource.inventoryIndex] = currentEquipped;
+      
+      // Mark equipment as changed
+      equipmentChanged = true;
     }
     
     // From equipment to inventory
@@ -243,6 +248,9 @@ export class UI {
       } else {
         this.currentPlayerState.equipment[this.draggedItemSource.equipmentSlot as keyof typeof this.currentPlayerState.equipment] = null;
       }
+      
+      // Mark equipment as changed
+      equipmentChanged = true;
     }
     
     // From equipment to equipment
@@ -263,7 +271,19 @@ export class UI {
         this.currentPlayerState.equipment[targetSlot.equipmentSlot as keyof typeof this.currentPlayerState.equipment] = 
           this.currentPlayerState.equipment[this.draggedItemSource.equipmentSlot as keyof typeof this.currentPlayerState.equipment];
         this.currentPlayerState.equipment[this.draggedItemSource.equipmentSlot as keyof typeof this.currentPlayerState.equipment] = temp;
+        
+        // Mark equipment as changed
+        equipmentChanged = true;
       }
+    }
+    
+    // Dispatch event if equipment changed
+    if (equipmentChanged) {
+      // Dispatch custom event that GameController will listen for
+      const equipmentChangedEvent = new CustomEvent('equipment-changed', {
+        detail: { playerState: this.currentPlayerState }
+      });
+      document.dispatchEvent(equipmentChangedEvent);
     }
   }
   
@@ -474,7 +494,7 @@ export class UI {
   /**
    * Render equipment slots on the right side
    * @param player Player state to get equipped items from 
-   */
+   */ 
   private renderEquipmentSlots(player: PlayerState): void {
     const { width, height } = this.canvas;
     

@@ -1,4 +1,6 @@
 import Actor, { Direction } from './Actor';
+import { Item, EquipmentSlot } from '../item/Item';
+import { Weapon } from '../item/Weapon';
 
 /**
  * Player input state interface
@@ -9,6 +11,20 @@ export interface PlayerInput {
   left: boolean;
   right: boolean;
   action: boolean;
+}
+
+/**
+ * Equipment interface for player
+ */
+export interface Equipment {
+  [EquipmentSlot.HEAD]: Item | null;
+  [EquipmentSlot.BODY]: Item | null;
+  [EquipmentSlot.MAIN_HAND]: Item | null;
+  [EquipmentSlot.OFF_HAND]: Item | null;
+  [EquipmentSlot.GLOVES]: Item | null;
+  LEFT_RING: Item | null;
+  RIGHT_RING: Item | null;
+  [EquipmentSlot.AMULET]: Item | null;
 }
 
 /**
@@ -28,6 +44,22 @@ export default class Player extends Actor {
   // Player-specific properties
   private _health: number = 100;
   private _maxHealth: number = 100;
+  
+  // Equipment
+  private _equipment: Equipment = {
+    [EquipmentSlot.HEAD]: null,
+    [EquipmentSlot.BODY]: null,
+    [EquipmentSlot.MAIN_HAND]: null,
+    [EquipmentSlot.OFF_HAND]: null,
+    [EquipmentSlot.GLOVES]: null,
+    LEFT_RING: null,
+    RIGHT_RING: null,
+    [EquipmentSlot.AMULET]: null
+  };
+  
+  // Weapon images
+  private _weaponImages: Map<string, HTMLImageElement> = new Map();
+  private _weaponImagesLoaded: Map<string, boolean> = new Map();
   
   // Directional images for player
   private _directionalImages: {
@@ -81,6 +113,35 @@ export default class Player extends Actor {
     };
     
     img.src = src;
+  }
+
+  /**
+   * Get player equipment
+   */
+  get equipment(): Equipment {
+    return this._equipment;
+  }
+
+  /**
+   * Equip an item to a specific slot
+   * @param item The item to equip
+   * @param slot The equipment slot 
+   */
+  equip(item: Item | null, slot: keyof Equipment): void {
+    if (item && item.image && !this._weaponImages.has(item.image)) {
+      // Load weapon image if not already loaded
+      const img = new Image();
+      this._weaponImages.set(item.image, img);
+      this._weaponImagesLoaded.set(item.image, false);
+      
+      img.onload = () => {
+        this._weaponImagesLoaded.set(item.image, true);
+      };
+      
+      img.src = item.image;
+    }
+    
+    this._equipment[slot] = item;
   }
   
   /**
@@ -236,6 +297,7 @@ export default class Player extends Actor {
     // Check if facing left to flip the image horizontally
     const isFlipped = this._direction === Direction.LEFT;
     
+    // Render player character
     if (isFlipped) {
       // Simplified approach for flipping
       ctx.save();
@@ -263,6 +325,46 @@ export default class Player extends Actor {
       } else {
         ctx.fillStyle = '#FF0000';
         ctx.fillRect(renderX, renderY, this._width, this._height);
+      }
+    }
+    
+    // Render equipped weapon (main hand)
+    const mainHandWeapon = this._equipment[EquipmentSlot.MAIN_HAND];
+    if (mainHandWeapon && mainHandWeapon.image) {
+      const weaponImg = this._weaponImages.get(mainHandWeapon.image);
+      const weaponImgLoaded = this._weaponImagesLoaded.get(mainHandWeapon.image);
+      
+      if (weaponImg && weaponImgLoaded) {
+        ctx.save();
+        
+        // Position weapon relative to player
+        const weaponWidth = this._width * 0.75;  // Scale weapon size relative to player
+        const weaponHeight = this._height * 0.75;
+        
+        // Position weapon based on direction
+        let weaponRenderX = renderX;
+        let weaponRenderY = renderY;
+        
+        if (isFlipped) {
+            // Position to the left
+            weaponRenderX = renderX + 12;
+            weaponRenderY = renderY + this._height / 2 + 12.5;
+            ctx.translate(weaponRenderX, weaponRenderY);
+            ctx.rotate(-Math.PI / 2); // 90 degrees (as specified for flipped)
+            ctx.translate(-weaponWidth / 2, -weaponHeight / 2);
+        } else {
+            // Position to the right
+            weaponRenderX = renderX + 42;
+            weaponRenderY = renderY + this._height / 2 + 12.5;
+            ctx.translate(weaponRenderX, weaponRenderY);
+            ctx.rotate(Math.PI / 2); // -90 degrees (as specified for non-flipped)
+            ctx.translate(-weaponWidth / 2, -weaponHeight / 2);
+        }
+        
+        // Draw the weapon
+        ctx.drawImage(weaponImg, 0, 0, weaponWidth, weaponHeight);
+        
+        ctx.restore();
       }
     }
     

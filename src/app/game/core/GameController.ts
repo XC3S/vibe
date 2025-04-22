@@ -5,7 +5,12 @@ import { TILE_SIZE } from './constants';
 import Enemy from './Enemy';
 import EnemyManager from './EnemyManager';
 import { UI } from '../HUD';
-import { PlayerState, createPlayerState } from './PlayerController';
+import { PlayerState, createPlayerState, syncEquipmentToPlayer } from './PlayerController';
+
+// Define interface for equipment changed event
+interface EquipmentChangedEvent {
+  playerState: PlayerState;
+}
 
 // Simpler interface for position and size (matches camera.ts requirements)
 interface PositionAndSize {
@@ -102,6 +107,22 @@ export default class GameController {
    */
   initializeUI(canvas: HTMLCanvasElement, context: CanvasRenderingContext2D): void {
     this._ui = new UI(canvas, context);
+    
+    // Listen for equipment changes from UI
+    document.addEventListener('equipment-changed', 
+      ((event: CustomEvent<EquipmentChangedEvent>) => this.handleEquipmentChanged(event)) as EventListener
+    );
+  }
+  
+  /**
+   * Handle equipment changed event from UI
+   * @param event Custom event with player state
+   */
+  private handleEquipmentChanged(event: CustomEvent<EquipmentChangedEvent>): void {
+    if (event.detail && event.detail.playerState) {
+      // Sync equipment from PlayerState to Player object
+      syncEquipmentToPlayer(this._player, event.detail.playerState);
+    }
   }
   
   /**
@@ -251,6 +272,9 @@ export default class GameController {
       left: this._player.input.left,
       right: this._player.input.right
     };
+    
+    // Sync equipment from PlayerState to Player (to ensure weapons are always displayed correctly)
+    syncEquipmentToPlayer(this._player, this._playerState);
     
     // Update all enemies
     for (const enemy of this._enemies) {
