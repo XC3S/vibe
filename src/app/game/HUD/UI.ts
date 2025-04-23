@@ -585,4 +585,12 @@ export class UI {
     // Amulet (below helmet, above chest)
     drawEquipmentSlot(baseX + slotSize + padding/2, baseY, EquipmentSlot.AMULET);
   }
+
+  /**
+   * Get the rendering context for skills and effects
+   * @returns The canvas rendering context
+   */
+  getRenderingContext(): CanvasRenderingContext2D {
+    return this.context;
+  }
 } 

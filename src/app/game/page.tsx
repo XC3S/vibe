@@ -122,20 +122,7 @@ const GameCanvas = () => {
           e.preventDefault(); // Prevent tab from changing focus
           // Tab is handled by playerController
           break;
-        // Add skill keybindings
-        case '1':
-          console.log('skill1');
-          gameController.updatePlayerInput({ skill1: true });
-          break;
-        case '2':
-          gameController.updatePlayerInput({ skill2: true });
-          break;
-        case '3':
-          gameController.updatePlayerInput({ skill3: true });
-          break;
-        case '4':
-          gameController.updatePlayerInput({ skill4: true });
-          break;
+        // Skill keybindings are already handled by GameController
       }
     };
 
@@ -160,7 +147,6 @@ const GameCanvas = () => {
         case ' ':
           gameController.updatePlayerInput({ action: false });
           break;
-        // Reset skill inputs on key up is handled by the player update loop
       }
     };
 

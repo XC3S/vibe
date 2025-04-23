@@ -5,7 +5,7 @@ import { TILE_SIZE } from './constants';
 import Enemy from './Enemy';
 import EnemyManager from './EnemyManager';
 import { UI } from '../HUD';
-import { PlayerState, createPlayerState, syncEquipmentToPlayer } from './PlayerController';
+import { PlayerState, createPlayerState, syncEquipmentToPlayer, syncSkillInputsToPlayer } from './PlayerController';
 
 // Define interface for equipment changed event
 interface EquipmentChangedEvent {
@@ -260,8 +260,17 @@ export default class GameController {
     const checkCollision = (x: number, y: number, width: number, height: number) => 
       checkCollisionWithMap(x, y, width, height, this._gameMap);
     
-    // Update player
-    this._player.update(deltaTime, checkCollision);
+    // Sync skill inputs from PlayerState to Player
+    syncSkillInputsToPlayer(this._player, this._playerState);
+    
+    // Get rendering context for skills
+    let ctx: CanvasRenderingContext2D | undefined = undefined;
+    if (this._ui) {
+      ctx = this._ui.getRenderingContext();
+    }
+    
+    // Update player with enemies and context for skill rendering
+    this._player.update(deltaTime, checkCollision, this._enemies, ctx);
     
     // Sync player state
     this._playerState.x = this._player.x;
