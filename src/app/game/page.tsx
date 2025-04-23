@@ -122,6 +122,20 @@ const GameCanvas = () => {
           e.preventDefault(); // Prevent tab from changing focus
           // Tab is handled by playerController
           break;
+        // Add skill keybindings
+        case '1':
+          console.log('skill1');
+          gameController.updatePlayerInput({ skill1: true });
+          break;
+        case '2':
+          gameController.updatePlayerInput({ skill2: true });
+          break;
+        case '3':
+          gameController.updatePlayerInput({ skill3: true });
+          break;
+        case '4':
+          gameController.updatePlayerInput({ skill4: true });
+          break;
       }
     };
 
@@ -146,6 +160,7 @@ const GameCanvas = () => {
         case ' ':
           gameController.updatePlayerInput({ action: false });
           break;
+        // Reset skill inputs on key up is handled by the player update loop
       }
     };
 
@@ -270,7 +285,7 @@ const GameCanvas = () => {
         className="bg-green-100"
       />
       <div className="bg-gray-200 p-2 text-sm">
-        Use arrow keys or WASD to move | Press Tab to open/close inventory
+        Use arrow keys or WASD to move | Press Tab to open/close inventory | Keys 1-4 for skills
       </div>
     </div>
   );

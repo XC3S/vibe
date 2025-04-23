@@ -31,6 +31,13 @@ export interface PlayerState {
     left: boolean;
     right: boolean;
   };
+  // Added skill activation flags
+  skills: {
+    skill1: boolean;
+    skill2: boolean;
+    skill3: boolean;
+    skill4: boolean;
+  };
 }
 
 /**
@@ -61,6 +68,22 @@ export function setupPlayerControls(playerRef: { current: PlayerState }): () => 
         e.preventDefault(); // Prevent tab from changing focus
         playerRef.current.inventoryOpen = !playerRef.current.inventoryOpen;
         break;
+      // Skill activation keys
+      case '1':
+        playerRef.current.skills.skill1 = true;
+        break;
+      case '2':
+        playerRef.current.skills.skill2 = true;
+        break;
+      case '3':
+        playerRef.current.skills.skill3 = true;
+        break;
+      case '4':
+        playerRef.current.skills.skill4 = true;
+        break;
+      case ' ': // Space bar as an alternative for skill1 (basic attack)
+        playerRef.current.skills.skill1 = true;
+        break;
     }
   };
 
@@ -82,6 +105,8 @@ export function setupPlayerControls(playerRef: { current: PlayerState }): () => 
       case 'd':
         playerRef.current.moving.right = false;
         break;
+      // We don't need key up handlers for skills since they
+      // are reset in the update loop after activation
     }
   };
 
@@ -131,6 +156,12 @@ export function createPlayerState(): PlayerState {
       down: false,
       left: false,
       right: false
+    },
+    skills: {
+      skill1: false,
+      skill2: false,
+      skill3: false,
+      skill4: false
     }
   };
 }
@@ -186,4 +217,25 @@ export function syncEquipmentToPlayer(player: Player, state: PlayerState): void 
       player.equip(item, slot);
     }
   }
+}
+
+/**
+ * Synchronizes skill inputs from PlayerState to the Player object
+ * @param player The player object to update
+ * @param state The player state containing skill input data
+ */
+export function syncSkillInputsToPlayer(player: Player, state: PlayerState): void {
+  // Update player's input state with skill keys
+  player.updateInput({
+    skill1: state.skills.skill1,
+    skill2: state.skills.skill2,
+    skill3: state.skills.skill3,
+    skill4: state.skills.skill4
+  });
+  
+  // Reset skills after syncing to prevent continuous activation
+  state.skills.skill1 = false;
+  state.skills.skill2 = false;
+  state.skills.skill3 = false;
+  state.skills.skill4 = false;
 } 

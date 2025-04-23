@@ -1,6 +1,7 @@
 import Actor, { Direction } from './Actor';
 import { Item, EquipmentSlot } from '../item/Item';
 import { Weapon } from '../item/Weapon';
+import SkillManager from '../skills/SkillManager';
 
 /**
  * Player input state interface
@@ -11,6 +12,10 @@ export interface PlayerInput {
   left: boolean;
   right: boolean;
   action: boolean;
+  skill1: boolean;
+  skill2: boolean;
+  skill3: boolean;
+  skill4: boolean;
 }
 
 /**
@@ -38,7 +43,11 @@ export default class Player extends Actor {
     down: false,
     left: false,
     right: false,
-    action: false
+    action: false,
+    skill1: false,
+    skill2: false,
+    skill3: false,
+    skill4: false
   };
   
   // Player-specific properties
@@ -56,6 +65,9 @@ export default class Player extends Actor {
     RIGHT_RING: null,
     [EquipmentSlot.AMULET]: null
   };
+  
+  // Skills management
+  private _skillManager: SkillManager;
   
   // Weapon images
   private _weaponImages: Map<string, HTMLImageElement> = new Map();
@@ -90,6 +102,7 @@ export default class Player extends Actor {
     imageSrc: string = ''
   ) {
     super(id, x, y, width, height, speed, imageSrc);
+    this._skillManager = new SkillManager(this);
   }
   
   /**
@@ -219,13 +232,24 @@ export default class Player extends Actor {
   }
   
   /**
+   * Get the skill manager
+   */
+  get skillManager(): SkillManager {
+    return this._skillManager;
+  }
+  
+  /**
    * Update player based on input and delta time
    * @param deltaTime Time elapsed since last frame in seconds
    * @param checkCollision Function to check for collisions
+   * @param enemies Array of enemies for skill targeting
+   * @param ctx Canvas rendering context
    */
   update(
     deltaTime: number, 
-    checkCollision?: (x: number, y: number, width: number, height: number) => boolean
+    checkCollision?: (x: number, y: number, width: number, height: number) => boolean,
+    enemies?: any[],
+    ctx?: CanvasRenderingContext2D
   ): void {
     if (!this._active || !this.isAlive) return;
     
@@ -272,10 +296,34 @@ export default class Player extends Actor {
         this._y += dy;
       }
     }
+    
+    // Check for skill activation
+    if (ctx) {
+      if (this._input.skill1) {
+        console.log('skill1**');
+        this._skillManager.useSkill(0, ctx, enemies);
+        this._input.skill1 = false; // Reset to prevent continuous triggering
+      }
+      if (this._input.skill2) {
+        this._skillManager.useSkill(1, ctx, enemies);
+        this._input.skill2 = false;
+      }
+      if (this._input.skill3) {
+        this._skillManager.useSkill(2, ctx, enemies);
+        this._input.skill3 = false;
+      }
+      if (this._input.skill4) {
+        this._skillManager.useSkill(3, ctx, enemies);
+        this._input.skill4 = false;
+      }
+    }
+    else {
+      console.log('no ctx');
+    }
   }
   
   /**
-   * Render the player with directional sprite and health bar
+   * Render the player with directional sprite, health bar, and skill bar
    * @param ctx Canvas rendering context
    * @param offsetX X offset for rendering (for camera)
    * @param offsetY Y offset for rendering (for camera)
@@ -390,6 +438,16 @@ export default class Player extends Actor {
       healthBarY,
       healthBarWidth * healthPercentage,
       healthBarHeight
+    );
+    
+    // Render skill bar at the bottom of the screen
+    const canvasHeight = ctx.canvas.height;
+    this._skillManager.renderSkillBar(
+      ctx,
+      10, // X position 
+      canvasHeight - 50, // Y position (bottom of screen with margin)
+      40, // Size of each skill icon
+      10 // Padding between icons
     );
   }
 } 
